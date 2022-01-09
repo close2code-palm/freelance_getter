@@ -2,6 +2,7 @@ import _thread
 import threading
 
 from flsite import Site
+from threader import Scanner
 
 fl_ru = Site(
     'https://www.fl.ru',
@@ -31,22 +32,25 @@ habr_fl = Site(
     habr_fl_1f, habr_fl_2f, habr_fl_3f
 )
 
+sites_fl_scanner = Scanner(1, habr_fl, freenace_ru, fl_ru)
+sites_fl_scanner.runner_h()
+#
 # habring_hot = threading.Thread(target=habr_fl.scrape_page())
-fling_hot = threading.Thread(target=fl_ru.scrape_page())
-freelancing_hot = threading.Thread(target=freenace_ru.scrape_page())
-
-def workout(th_name: threading.Thread):
-    th_name.start()
-    th_name.join()
-
-print(fl_ru)
-print(fling_hot)
-workout(fling_hot)
-workout(freelancing_hot)
-
-freenace_ru.show()
-print('\n----------------------------------'
-      '-------------------------------------------\n')
+# fling_hot = threading.Thread(target=fl_ru.scrape_page())
+# freelancing_hot = threading.Thread(target=freenace_ru.scrape_page())
+#
+# def workout(th_name: threading.Thread):
+#     th_name.start()
+#     th_name.join()
+#
+# print(fl_ru)
+# print(fling_hot)
+# workout(fling_hot)
+# workout(freelancing_hot)
+#
+# freenace_ru.show()
+# print('\n----------------------------------'
+#       '-------------------------------------------\n')
 
 
 # workout(habring_hot)
@@ -73,8 +77,9 @@ print('\n----------------------------------'
 #
 # fl_ru.scrape()
 # fl_ru.show()
+#
+# habr_fl.scrape(2)
 
-habr_fl.scrape()
-habr_fl.show()
+# habr_fl.show()
 
 # show_all()

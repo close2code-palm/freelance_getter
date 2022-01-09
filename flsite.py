@@ -6,12 +6,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-from part_time import Work_headers
+from part_time import WorkHeaders
 
 
+#Need to be splited into parser and site_handler
 class Site:
     """Represents object for a resource to scrape for job data"""
-    job_headers = []
 
     def __init__(self, url, name, act_counter, suffs: [str], *containers, js=False):
         self.url = url
@@ -21,6 +21,7 @@ class Site:
         self.html_cont = containers
         #possibly extensible for page mechanics check
         self.dyn = js
+        self.job_headers = []
 
     #will be needed on added spec sufficcess
     def _url_constr(self, initial=True) -> str:
@@ -54,16 +55,21 @@ class Site:
     def scrape(self, needed=1):
         """getting offers from all but 1st page to list """
         _scr_counter = min(needed, self.act_counter)
-        for c in range(_scr_counter):
+        last_sup = ""
+        for c in range(1, _scr_counter+1):
+            #here MUST BE IMPLEMENTED CHECK FOR REPETITION
             scr_url = self._url_constr(initial=False) + str(c)
             fl_sup = self._get_soup(scr_url)
-            ziped_conts = self._jobs_data(fl_sup)
-            self.ent_gen(ziped_conts)
+            if last_sup != fl_sup:
+                ziped_conts = self._jobs_data(fl_sup)
+                self.ent_gen(ziped_conts)
+            else:
+                break
 
     def ent_gen(self, parameters):
         """constructing job item for processing"""
         for jt, jp, jd in parameters:
-            head = Work_headers(str(uuid.uuid4()), jt.text.strip(), jp.text.strip(),
+            head = WorkHeaders(str(uuid.uuid4()), jt.text.strip(), jp.text.strip(),
                                 jd.text.strip())
             self.job_headers.append(head)
 
