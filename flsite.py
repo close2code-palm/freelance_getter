@@ -9,27 +9,29 @@ from webdriver_manager.chrome import ChromeDriverManager
 from part_time import WorkHeaders
 
 
-#Need to be splited into parser and site_handler
+# Need to be splited into parser and site_handler
 class Site:
     """Represents object for a resource to scrape for job data"""
 
-    def __init__(self, url, name, act_counter, suffs: [str], *containers, js=False):
+    def __init__(self, url, name, act_counter, suffs, *containers, js=False):
         self.url = url
         self.name = name
         self.job_suffixes = suffs
         self.act_counter: int = act_counter
         self.html_cont = containers
-        #possibly extensible for page mechanics check
+        # TODO possibly extensible for page rendering mechanics check
         self.dyn = js
+        # TODO storage class
+        # TODO store to not repeat
         self.job_headers = []
 
-    #will be needed on added spec sufficcess
-    def _url_constr(self, initial=True) -> str:
+    # will be needed on added spec sufficcess
+    def _url_constr(self, sphere, initial=True) -> str:
         """method for constructing spec urls with nuerations"""
 
-        spec_url = self.url + self.job_suffixes[0]
+        spec_url = self.url + self.job_suffixes[sphere]
         if not initial:
-            return spec_url + self.job_suffixes[-1]
+            return spec_url + self.job_suffixes['pager']
         return spec_url
 
     # def scrape_page(self):
@@ -42,7 +44,6 @@ class Site:
     def get_tasks(self):
         pass
 
-    #needs to be combined with scrape_page
     def _jobs_data(self, soup):
         """getting html job info"""
         jh_parts = []
@@ -51,15 +52,15 @@ class Site:
         fl_offrs = zip(*jh_parts)
         return fl_offrs
 
-    #needs to be combined with scrape_page
-    def scrape(self, needed=1):
+    def scrape(self, theme, needed=1):
         """getting offers from all but 1st page to list """
         _scr_counter = min(needed, self.act_counter)
         last_sup = ""
-        for c in range(1, _scr_counter+1):
-            #here MUST BE IMPLEMENTED CHECK FOR REPETITION
-            scr_url = self._url_constr(initial=False) + str(c)
+        for c in range(1, _scr_counter + 1):
+            # here MUST BE IMPLEMENTED CHECK FOR REPETITION
+            scr_url = self._url_constr(theme, initial=False) + str(c)
             fl_sup = self._get_soup(scr_url)
+            # TODO returns function to thread after check
             if last_sup != fl_sup:
                 ziped_conts = self._jobs_data(fl_sup)
                 self.ent_gen(ziped_conts)
@@ -70,7 +71,7 @@ class Site:
         """constructing job item for processing"""
         for jt, jp, jd in parameters:
             head = WorkHeaders(str(uuid.uuid4()), jt.text.strip(), jp.text.strip(),
-                                jd.text.strip())
+                               jd.text.strip())
             self.job_headers.append(head)
 
     def _get_soup(self, url: str):
@@ -86,9 +87,10 @@ class Site:
 
         if self.dyn:
             page = selenm_get(url)
+            bs = bs4.BeautifulSoup(page, 'html.parser')
         else:
             page = requests.get(url)
-        bs = bs4.BeautifulSoup(page.text, 'html.parser')
+            bs = bs4.BeautifulSoup(page.text, 'html.parser')
         return bs
 
     def show(self):
