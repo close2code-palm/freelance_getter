@@ -47,66 +47,26 @@ habr_fl = Site(
      'pager': '?page='},
     habr_fl_1f, habr_fl_2f, habr_fl_3f,
 )
-# print(habr_fl.job_suffixes)
-# habr_fl.scrape('dev')
-# habr_fl.show()
-fl_ru.scrape('coding')
-fl_ru.show()
-# freenace_ru.scrape('python')
-# freenace_ru.show()
-
-# sites instation with all its data
-# scanner intstation with sites
-# scraper setting spec options, deep
-
-# sites_fl_scanner = Scanner(1, habr_fl, freenace_ru, fl_ru)
-# sites_fl_scanner.runner_h()
-#
-# habring_hot = threading.Thread(target=habr_fl.scrape_page())
-# fling_hot = threading.Thread(target=fl_ru.scrape_page())
-# freelancing_hot = threading.Thread(target=freenace_ru.scrape_page())
-#
-# def workout(th_name: threading.Thread):
-#     th_name.start()
-#     th_name.join()
-#
-# print(fl_ru)
-# print(fling_hot)
-# workout(fling_hot)
-# workout(freelancing_hot)
-#
-# freenace_ru.show()
-# print('\n----------------------------------'
-#       '-------------------------------------------\n')
 
 
-# workout(habring_hot)
-# workout(fling_hot)
-# workout(freelancing_hot)
+def show_parsed(flst: Site, *keys):
+    flst.scrape(*keys)
+    flst.show()
 
-#
-# def show_all():
-#     fl_ru.show()
-#     freenace_ru.show()
-#     habr_fl.show()
-#
-#
-# ss = [fl_ru, habr_fl, freenace_ru]
-# all_works = set()
-# for site in ss:
-#     all_works.add(threading.Thread(target=site.scrape()))
-#
-# for t in all_works:
-#     workout(t)
-#
-# for s in ss:
-#     s.show()
-#
-# fl_ru.scrape()
-# fl_ru.show()
-#
-# habr_fl.scrape(2)
 
-# habr_fl.show()
+# _thread.start_new_thread(show_parsed, (habr_fl, 'dev'))
+# _thread.start_new_thread(show_parsed, (fl_ru, 'coding'))
+# _thread.start_new_thread(show_parsed, (freenace_ru, 'python'))
+threads_cnt_l = []
+hfl_t = threading.Thread(target=show_parsed, args=(habr_fl, 'dev'))
+threads_cnt_l.append(hfl_t)
+flr_t = threading.Thread(target=show_parsed, args=(fl_ru, 'coding'))
+threads_cnt_l.append(flr_t)
+fr_r_t = threading.Thread(target=show_parsed, args=(freenace_ru, 'python'))
+threads_cnt_l.append(fr_r_t)
 
-# show_all()
+for t in threads_cnt_l:
+    t.start()
+
+for t in threads_cnt_l:
+    t.join()
