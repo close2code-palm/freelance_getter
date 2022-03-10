@@ -1,4 +1,5 @@
 from itertools import takewhile
+from typing import Optional
 
 import configparser
 import psycopg2
@@ -7,7 +8,10 @@ from flsite import Site
 from part_time import WorkHeaders
 
 
-class Storage:
+class StorageOperator:
+    """makes all operations on database
+    handles the connection and sql fuctionality
+    gets data from Flsite instances"""
 
     def __init__(self, *stored: [Site]):
         # for st in stored:
@@ -26,7 +30,10 @@ class Storage:
         port={config['postgresql']['port']} \
         database={config['postgresql']['db']}")
 
-    def _get_watcher(self):
+    # todo make update with 1 conection instead of 2
+    def _get_watchers(self) -> Optional:
+        """getting the most fresh row for each site
+        possible """
         qry_names = '''CREATE or REPLACE VIEW jobs_on_sites_view AS 
             SELECT full_dscrptn, naming, timings 
             FROM fl_offers
@@ -44,10 +51,14 @@ class Storage:
         return latests
 
     def update_in_db(self, whds: [WorkHeaders]):
+        """Make write to db of new job data
+        @:param whds is headers with same name"""
         query = f'''INSERT INTO fl_offers (uid, reward, full_dscrptn, timings, naming)
              VALUES (%s,%s,%s,%s,%s);'''
 
         def watcher_eqls(whdr: WorkHeaders):
+            """possible repetetive fields,
+            so checs 1+2 fields"""
             if (whdr.util_info, whdr.source, whdr.descr) in self._get_watcher():
                 return True
             return False
