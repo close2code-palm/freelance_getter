@@ -1,3 +1,7 @@
+"""work store module
+makes operations on database
+and kind of DAO for scraped objects"""
+
 from itertools import takewhile
 from typing import Optional
 
@@ -59,7 +63,7 @@ class StorageOperator:
         def watcher_eqls(whdr: WorkHeaders):
             """possible repetetive fields,
             so checs 1+2 fields"""
-            if (whdr.util_info, whdr.source, whdr.descr) in self._get_watcher():
+            if (whdr.util_info, whdr.source, whdr.descr) in self._get_watchers():
                 return True
             return False
 
@@ -72,3 +76,15 @@ class StorageOperator:
                                         header.descr, header.util_info, header.source))
             conn.commit()
         conn.close()
+
+class Storage:
+    """Getting data for storing and sorting """
+
+    def __init__(self):
+        pass
+
+    def sort(self):
+        """Sorts items by key(ease, money, stack counts)"""
+
+    def save(self):
+        """Saves data in needed formats(database, model-files)"""
