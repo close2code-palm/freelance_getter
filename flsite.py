@@ -1,3 +1,7 @@
+"""Whole scrape machinery
+class without threading
+"""
+
 import uuid
 
 import bs4
@@ -13,6 +17,9 @@ from part_time import WorkHeaders
 class Site:
     """Represents object for a resource to scrape for job data"""
 
+    def get_scraped(self):
+        return self.name, self.job_headers
+
     def __init__(self, url, name, act_counter, suffs, *containers, js=False):
         self.url = url
         self.name = name
@@ -20,9 +27,10 @@ class Site:
         self.act_counter: int = act_counter
         self.html_cont = containers
         # TODO possibly extensible for page rendering mechanics check
+        # if 'document.write' in ...
         self.dyn = js
-        # TODO storage class
         # TODO store to not repeat
+        # UNIQUE in db or watcher
         self.job_headers = []
 
     # will be needed on added spec sufficcess
@@ -60,20 +68,22 @@ class Site:
             # here MUST BE IMPLEMENTED CHECK FOR REPETITION
             scr_url = self._url_constr(theme, initial=False) + str(c)
             fl_sup = self._get_soup(scr_url)
-            # TODO returns function to thread after check
+            # TODO returns function to thread? after check
             if last_sup != fl_sup:
                 ziped_conts = self._jobs_data(fl_sup)
                 self.ent_gen(ziped_conts)
             else:
                 break
 
+    # TODO normalize utils
     def ent_gen(self, parameters):
         """constructing job item for processing"""
         for jt, jp, jd in parameters:
             head = WorkHeaders(str(uuid.uuid4()), jt.text.strip(), jp.text.strip(),
-                               jd.text.strip())
+                               jd.text.strip(), self.name)
             self.job_headers.append(head)
 
+    # TODO make decorator for concurrency
     def _get_soup(self, url: str):
         """making soup object for of site"""
 
@@ -93,6 +103,7 @@ class Site:
             bs = bs4.BeautifulSoup(page.text, 'html.parser')
         return bs
 
+# TODO should be moved to storage
     def show(self):
         for header in self.job_headers:
-            print(header, end='\n')
+            print(self.name, header)
