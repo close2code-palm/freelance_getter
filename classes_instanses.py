@@ -1,21 +1,23 @@
-import _thread
+"""Project runner with scrape options and configuration of pre-defined objects"""
+
 import threading
 
-from flsite import Site
-from threader import Scanner
+import argparse
 
-fl_ru = Site(
-    'https://www.fl.ru',
-    'FL.RU',
-    6,
-    {'coding': '/projects/category/programmirovanie',
-     'sites': '/projects/category/razrabotka-sajtov',
-     '3D': '/projects/category/3d-grafika/',
-     'pager': '/?page='},
-    ('a', {'class': 'b-post__link'}), ('div', {'class': 'b-post__price'}),
-    ('div', {'class': 'b-post__txt'}),
-    js=True
-)
+from flsite import Site
+
+# fl_ru = Site(
+#     'https://www.fl.ru',
+#     'FL.RU',
+#     6,
+#     {'coding': '/projects/category/programmirovanie',
+#      'sites': '/projects/category/razrabotka-sajtov',
+#      '3D': '/projects/category/3d-grafika/',
+#      'pager': '/?page='},
+#     ('a', {'class': 'b-post__link'}), ('div', {'class': 'b-post__price'}),
+#     ('div', {'class': 'b-post__txt'}),
+#     js=True
+# )
 
 freenace_ru = Site(
     'https://freelance.ru',
@@ -49,6 +51,10 @@ habr_fl = Site(
 )
 
 
+# upwrk = Site('https://www.upwork.com/freelance-jobs/python-script/',
+#              'UPWORK', )
+
+
 def show_parsed(flst: Site, *keys):
     flst.scrape(*keys)
     flst.show()
@@ -60,8 +66,9 @@ def show_parsed(flst: Site, *keys):
 threads_cnt_l = []
 hfl_t = threading.Thread(target=show_parsed, args=(habr_fl, 'dev'))
 threads_cnt_l.append(hfl_t)
-flr_t = threading.Thread(target=show_parsed, args=(fl_ru, 'coding'))
-threads_cnt_l.append(flr_t)
+# flru -bug with output + pro_only, don't need it
+# flr_t = threading.Thread(target=show_parsed, args=(fl_ru, 'coding'))
+# threads_cnt_l.append(flr_t)
 fr_r_t = threading.Thread(target=show_parsed, args=(freenace_ru, 'python'))
 threads_cnt_l.append(fr_r_t)
 
@@ -70,3 +77,48 @@ for t in threads_cnt_l:
 
 for t in threads_cnt_l:
     t.join()
+#
+# connectn = psycopg2.connect(user='postgres',
+#                             password='wont4Org!0',
+#                             host='localhost',
+#                             port='5433',
+#                             database='working_data')
+#
+# res_fr_habrfl = habr_fl.job_headers
+# print(res_fr_habrfl[0].id)
+#
+# try:
+#     cursr = connectn.cursor()
+#
+#
+#     def build_query_n_exct(headers: [WorkHeaders]):
+#
+#         query = f'''INSERT INTO fl_offers (uid, reward, full_dscrptn, timings)
+#          VALUES (%s,%s,%s,%s);'''
+#
+#         for header in headers:
+#             cursr.execute(query, (header.id, header.price, header.descr, header.util_info))
+#         connectn.commit()
+#
+#
+#     build_query_n_exct(habr_fl.job_headers)
+#     build_query_n_exct(freenace_ru.job_headers)
+#
+# finally:
+#     if connectn:
+#         cursr.close()
+#         connectn.close()
+parser = argparse.ArgumentParser()
+
+# Here builder pattern come into a play
+parser.add_argument('-u',  '--update-db',
+                    help='saves new results to the database', action='store_true')
+parser.add_argument('spec', help='specialisations sites will be parsed for', type=str,
+                    choices=['pydev', 'design', 'sysops'])
+
+amount2get = parser.add_mutually_exclusive_group(required=True)
+amount2get.add_argument('-f', '--fresh-only', help='shows only the last added propositions',
+                        action='store_true')
+parser.add_argument('-a', type=int, help='for how long you want to get information')
+args = parser.parse_args()
+
