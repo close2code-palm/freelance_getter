@@ -19,6 +19,8 @@ from flsite import Site
 #     js=True
 # )
 
+# TODO make a yaml config for user, factory for instansiating
+
 freenace_ru = Site(
     'https://freelance.ru',
     'FREELANCE.RU',
@@ -63,20 +65,13 @@ def show_parsed(flst: Site, *keys):
 # _thread.start_new_thread(show_parsed, (habr_fl, 'dev'))
 # _thread.start_new_thread(show_parsed, (fl_ru, 'coding'))
 # _thread.start_new_thread(show_parsed, (freenace_ru, 'python'))
-threads_cnt_l = []
-hfl_t = threading.Thread(target=show_parsed, args=(habr_fl, 'dev'))
-threads_cnt_l.append(hfl_t)
 # flru -bug with output + pro_only, don't need it
 # flr_t = threading.Thread(target=show_parsed, args=(fl_ru, 'coding'))
 # threads_cnt_l.append(flr_t)
+threads_cnt_l = []
 fr_r_t = threading.Thread(target=show_parsed, args=(freenace_ru, 'python'))
 threads_cnt_l.append(fr_r_t)
 
-for t in threads_cnt_l:
-    t.start()
-
-for t in threads_cnt_l:
-    t.join()
 #
 # connectn = psycopg2.connect(user='postgres',
 #                             password='wont4Org!0',
@@ -108,17 +103,37 @@ for t in threads_cnt_l:
 #     if connectn:
 #         cursr.close()
 #         connectn.close()
-parser = argparse.ArgumentParser()
+
+prg_dscr = 'All in one for job offers and proposal data processing'
+prg_name = 'Jobipy'
+usg = 'Use this just if you aren\'t afraid of burning out'
+parser = argparse.ArgumentParser(prog=prg_name, usage=usg, description=prg_dscr)
 
 # Here builder pattern come into a play
-parser.add_argument('-u',  '--update-db',
-                    help='saves new results to the database', action='store_true')
+# parser.add_argument('-u',  '--update-db',
+#                     help='saves new results to the database', action='store_true')
 parser.add_argument('spec', help='specialisations sites will be parsed for', type=str,
-                    choices=['pydev', 'design', 'sysops'])
+                    choices=['pydev', 'design', 'sysops', 'preconfigured'])
 
 amount2get = parser.add_mutually_exclusive_group(required=True)
 amount2get.add_argument('-f', '--fresh-only', help='shows only the last added propositions',
                         action='store_true')
-parser.add_argument('-a', type=int, help='for how long you want to get information')
-args = parser.parse_args()
+amount2get.add_argument('-a', type=int, help='for how long you want to get information',
+                        action='store',
+                        default=1,
+                        nargs='?')
+prsd_args = parser.parse_args()
 
+# print(prsd_args)
+# print(prsd_args.a)
+# print(prsd_args.fresh_only)
+# print(prsd_args.spec)
+hfl_t = threading.Thread(target=show_parsed, args=(habr_fl,
+                                                   'all', prsd_args.a))
+threads_cnt_l.append(hfl_t)
+if prsd_args.spec == 'preconfigured':
+    for t in threads_cnt_l:
+        t.start()
+
+    for t in threads_cnt_l:
+        t.join()
