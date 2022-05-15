@@ -3,6 +3,7 @@ class without threading
 """
 
 import uuid
+from typing import List
 
 import bs4
 import requests
@@ -33,7 +34,7 @@ class Site:
         self.dyn = js_rends
         # TODO store to not repeat
         # UNIQUE in db or watcher
-        self.job_headers = []
+        self.job_headers: List[WorkHeaders] = []
 
     # will be needed on added spec sufficcess
     def _url_constr(self, sphere, initial=True) -> str:
@@ -66,9 +67,9 @@ class Site:
         """getting offers from all but 1st page to list """
         # _scr_counter = min(needed, self.act_counter)
         last_sup = ""
-        for c in range(1, needed + 1):
+        for p_c in range(1, needed + 1):
             # here MUST BE IMPLEMENTED CHECK FOR REPETITION
-            scr_url = self._url_constr(theme, False) + str(c)
+            scr_url = self._url_constr(theme, False) + str(p_c)
             fl_sup = self._get_soup(scr_url)
             # TODO returns function to thread? after check
             # possible sol: append(thread(args));excute;join
@@ -127,7 +128,9 @@ class HabrFlSite(Site):
 
     def ent_gen(self, parameters):
         for tags_soup, j_t, j_p, j_d in parameters:
-            tags = tags_soup.findall(*self.tags_concrete)
+            # print(*self.tags_concrete)
+            # print(tags_soup)
+            tags = tags_soup.find_all(*self.tags_concrete)
             habr_proposal = HabrWorkHeader(str(uuid.uuid4()),
                                            j_t.text.strip(), j_p.text.strip(),
                                            j_d.text.strip(), self.name,

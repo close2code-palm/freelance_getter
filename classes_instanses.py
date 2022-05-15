@@ -1,10 +1,13 @@
 """Project runner with scrape options and configuration of pre-defined objects"""
 
 import threading
+import time
 
 import argparse
+from win32ctypes.pywin32 import win32api
 
-from flsite import Site
+from alerting import notify_w_job
+from flsite import Site, HabrFlSite
 
 # fl_ru = Site(
 #     'https://www.fl.ru',
@@ -35,7 +38,24 @@ freenace_ru = Site(
 habr_fl_1f = 'div', {"class": "task__title"}
 habr_fl_2f = 'span', {'class': 'count'}
 habr_fl_3f = 'span', {"class": "params__published-at"}
-habr_fl = Site(
+# habr_fl = Site(
+#     'https://freelance.habr.com',
+#     'HABRFL',
+#     10,
+#     {'all': '/tasks',
+#      'dev': '/tasks?categories=development_all_inclusive,development_backend\
+#      ,development_frontend,development_prototyping,development_ios,development_android,\
+#      development_desktop,development_bots,development_games,development_1c_dev,development_scripts,\
+#      development_voice_interfaces,development_other',
+#      'testing': '/tasks?categories=testing_sites,testing_mobile,testing_software',
+#      'design': '/tasks?categories=design_sites,design_landings,design_logos,design_illustrations,\
+#      design_mobile,design_icons,design_polygraphy,design_banners,design_graphics,design_corporate_identity,\
+#      design_presentations,design_modeling,design_animation,design_photo,design_other',
+#      'pager': '?page='},
+#     habr_fl_1f, habr_fl_2f, habr_fl_3f,
+# )
+
+explicit_habr = HabrFlSite(
     'https://freelance.habr.com',
     'HABRFL',
     10,
@@ -72,6 +92,7 @@ threads_cnt_l = []
 fr_r_t = threading.Thread(target=show_parsed, args=(freenace_ru, 'python'))
 threads_cnt_l.append(fr_r_t)
 
+
 #
 # connectn = psycopg2.connect(user='postgres',
 #                             password='wont4Org!0',
@@ -103,17 +124,23 @@ threads_cnt_l.append(fr_r_t)
 #     if connectn:
 #         cursr.close()
 #         connectn.close()
+def parser_constructor():
+    """initialize the argparser"""
+    prg_dscr = 'All in one for job offers and proposal data processing'
+    prg_name = 'Jobipy'
+    usg = 'Use this just if you aren\'t afraid of burning out'
+    arg_parser = argparse.ArgumentParser(prog=prg_name, usage=usg, description=prg_dscr)
+    return arg_parser
 
-prg_dscr = 'All in one for job offers and proposal data processing'
-prg_name = 'Jobipy'
-usg = 'Use this just if you aren\'t afraid of burning out'
-parser = argparse.ArgumentParser(prog=prg_name, usage=usg, description=prg_dscr)
 
+parser = parser_constructor()
 # Here builder pattern come into a play
 # parser.add_argument('-u',  '--update-db',
 #                     help='saves new results to the database', action='store_true')
 parser.add_argument('spec', help='specialisations sites will be parsed for', type=str,
                     choices=['pydev', 'design', 'sysops', 'preconfigured'])
+parser.add_argument('-n', '--notify', help='parses within loop and sends notifications',
+                    action='store_true')
 
 amount2get = parser.add_mutually_exclusive_group(required=True)
 amount2get.add_argument('-f', '--fresh-only', help='shows only the last added propositions',
@@ -124,16 +151,42 @@ amount2get.add_argument('-a', type=int, help='for how long you want to get infor
                         nargs='?')
 prsd_args = parser.parse_args()
 
+
 # print(prsd_args)
 # print(prsd_args.a)
 # print(prsd_args.fresh_only)
 # print(prsd_args.spec)
-hfl_t = threading.Thread(target=show_parsed, args=(habr_fl,
-                                                   'all', prsd_args.a))
-threads_cnt_l.append(hfl_t)
-if prsd_args.spec == 'preconfigured':
-    for t in threads_cnt_l:
-        t.start()
+# hfl_t = threading.Thread(target=show_parsed, args=(habr_fl,
+#                                                    'all', prsd_args.a))
+# threads_cnt_l.append(hfl_t)
+# if prsd_args.spec == 'preconfigured':
+#     for t in threads_cnt_l:
+#         t.start()
+#
+#     for t in threads_cnt_l:
+#         t.join()
 
-    for t in threads_cnt_l:
-        t.join()
+# todo add delta_storage to flsite.scraped
+
+def notify_loop(theme, needed_tags):
+    needed_tags = ['python', 'парс', 'bot', 'django', 'pars', 'бот']
+
+    def _check_tags(tag, job_container):
+        for fl_tag in job_container.tags:
+            if tag in fl_tag:
+                return True
+
+    while True:
+        explicit_habr.scrape(theme=theme)
+        for job_article in explicit_habr.job_headers:
+            for tag in needed_tags:
+                if tag in job_article.descr or _check_tags(tag, job_article):
+                    notify_w_job(job_article)
+        time.sleep(150)
+
+
+if prsd_args.a:
+    fl_waiter = threading.Thread(target=notify_loop,
+                                 args=('all', ['python', 'парс', 'bot', 'django', 'pars', 'бот']))
+    fl_waiter.start()
+    fl_waiter.join()
