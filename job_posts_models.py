@@ -10,13 +10,14 @@ class WorkHeaders:
     """Represent a task with characteristics"""
     uuid: str  # maybe uuid type?
     descr: str
+    link: str
     price: str
     util_info: str
     source: str
 
     def __ge__(self, other):
         """Make items self-measurable"""
-        # TODO regex digits at least
+        #TODO regex digits at least
         price2num = int(self.price.replace(' ', ''))
         price2num0 = int(other.price.replace(' ', ''))
         return price2num0 < price2num
@@ -28,6 +29,7 @@ class WorkHeaders:
     def __str__(self):
         """Easy human-readable representaion of class objects"""
         return f'You do: {self.descr}, for price: {self.price}. {self.util_info}.'
+
 
 @dataclass
 class HabrWorkHeader(WorkHeaders):
