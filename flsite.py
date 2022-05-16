@@ -19,22 +19,21 @@ from job_posts_models import WorkHeaders, HabrWorkHeader
 
 WorkDerivedArticle = NewType('WorkDerivedArticle', WorkHeaders)
 
+
 # Need to be splited into parser and site_handler
 class Site:
     """Represents object for a resource to scrape for job data"""
 
-    base_url = ''
-
     def get_scraped(self):
         return self.name, self.job_headers
 
-
     def __init__(self, url, name, act_counter,
-                 suffs, *containers, js_rends=False):
+                 suffs, url_cont, *containers, js_rends=False):
         self.url = url
         self.name = name
         self.job_suffixes = suffs
         self.act_counter: int = act_counter
+        self.url_cont = url_cont
         self.html_cont = containers
         # TODO possibly extensible for page rendering mechanics check
         # if 'document.write' in ...
@@ -72,6 +71,9 @@ class Site:
         jh_parts = []
         for c, cl in self.html_cont:
             jh_parts.append(list(soup.find_all(c, cl)))
+        if self.url_cont:
+            links = soup.select(self.url_cont)
+            jh_parts.append(links)
         fl_offrs = zip(*jh_parts)
         return fl_offrs
 
@@ -95,12 +97,12 @@ class Site:
     # TODO normalize utils
     def ent_gen(self, parameters):
         """constructing job item for processing"""
-        recently_generated_list: Set[WorkDerivedArticle] = set()
+        recently_generated_list: List[WorkDerivedArticle] = []
         for j_t, j_p, j_d in parameters:
             head = WorkHeaders(str(uuid.uuid4()), j_t.text.strip(), j_p.text.strip(),
                                j_d.text.strip(), self.name)
             if head not in self.job_headers:
-                recently_generated_list.add(head)
+                recently_generated_list.append(head)
         if self.job_headers:
             self.last_scan = recently_generated_list
         self.job_headers.extend(recently_generated_list)
@@ -142,15 +144,15 @@ class HabrFlSite(Site):
         self.tags_lists.extend(list(self.html_cont))
         self.html_cont = self.tags_lists
 
-
     def ent_gen(self, parameters):
         job_updates = []
-        for tags_soup, j_t, j_p, j_d in parameters:
+        for tags_soup, j_t, j_p, j_d, j_l in parameters:
             tags = tags_soup.find_all(*self.tags_concrete)
             # urls
             habr_proposal = HabrWorkHeader(str(uuid.uuid4()),
                                            j_t.text.strip(), j_p.text.strip(),
-                                           j_d.text.strip(), self.name,
+                                           j_d.text.strip(), self.url + \
+                                           j_l['href'], self.name,
                                            [tag.text for tag in tags])
             # self.job_headers.append(habr_proposal)
             if habr_proposal not in self.job_headers:

@@ -10,9 +10,9 @@ class WorkHeaders:
     """Represent a task with characteristics"""
     uuid: str  # maybe uuid type?
     descr: str
-    # link: str
     price: str
     util_info: str
+    link: str
     source: str
 
     def __ge__(self, other):
@@ -28,7 +28,8 @@ class WorkHeaders:
 
     def __str__(self):
         """Easy human-readable representaion of class objects"""
-        return f'You do: {self.descr}, for price: {self.price}. {self.util_info}.'
+        return f'You do: {self.descr}, for price: {self.price}. {self.util_info}.' \
+               f'Check {self.link} for more.'
 
 
 

@@ -72,7 +72,8 @@ explicit_habr = HabrFlSite(
      design_mobile,design_icons,design_polygraphy,design_banners,design_graphics,design_corporate_identity,\
      design_presentations,design_modeling,design_animation,design_photo,design_other',
      'pager': '?page='},
-    habr_fl_1f, habr_fl_2f, habr_fl_3f, habr_fl_4f
+    habr_fl_4f,
+    habr_fl_1f, habr_fl_2f, habr_fl_3f,
 )
 
 
