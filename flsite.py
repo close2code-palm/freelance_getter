@@ -144,7 +144,7 @@ class HabrFlSite(Site):
 
 
     def ent_gen(self, parameters):
-        job_updates = set()
+        job_updates = []
         for tags_soup, j_t, j_p, j_d in parameters:
             tags = tags_soup.find_all(*self.tags_concrete)
             # urls
@@ -154,7 +154,7 @@ class HabrFlSite(Site):
                                            [tag.text for tag in tags])
             # self.job_headers.append(habr_proposal)
             if habr_proposal not in self.job_headers:
-                job_updates.add(habr_proposal)
-            if self.job_headers:
-                self.last_scan = job_updates
-            self.job_headers.extend(job_updates)
+                job_updates.append(habr_proposal)
+        if self.job_headers:
+            self.last_scan = job_updates
+        self.job_headers.extend(job_updates)
