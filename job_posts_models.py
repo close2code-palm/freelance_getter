@@ -10,7 +10,7 @@ class WorkHeaders:
     """Represent a task with characteristics"""
     uuid: str  # maybe uuid type?
     descr: str
-    link: str
+    # link: str
     price: str
     util_info: str
     source: str
@@ -20,7 +20,7 @@ class WorkHeaders:
         #TODO regex digits at least
         price2num = int(self.price.replace(' ', ''))
         price2num0 = int(other.price.replace(' ', ''))
-        return price2num0 < price2num
+        return price2num0 >= price2num
 
     def __eq__(self, other):
         """When work is same in practice"""
@@ -31,6 +31,11 @@ class WorkHeaders:
         return f'You do: {self.descr}, for price: {self.price}. {self.util_info}.'
 
 
+
 @dataclass
 class HabrWorkHeader(WorkHeaders):
     tags: List[str]
+
+    def __eq__(self, other):
+        """Bounded with """
+        return self.price == other.price and self.descr == other.descr

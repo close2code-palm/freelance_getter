@@ -1,9 +1,11 @@
 """Project runner with scrape options and configuration of pre-defined objects"""
-
+import os
+import sys
 import threading
 import time
 
 import argparse
+from playsound import playsound
 from win32ctypes.pywin32 import win32api
 
 from alerting import notify_w_job
@@ -140,7 +142,7 @@ parser = parser_constructor()
 parser.add_argument('spec', help='specialisations sites will be parsed for', type=str,
                     choices=['pydev', 'design', 'sysops', 'preconfigured'])
 parser.add_argument('-n', '--notify', help='parses within loop and sends notifications',
-                    action='store_true')
+                    action='store_true', default=False)
 
 amount2get = parser.add_mutually_exclusive_group(required=True)
 amount2get.add_argument('-f', '--fresh-only', help='shows only the last added propositions',
@@ -178,15 +180,22 @@ def notify_loop(theme, needed_tags):
 
     while True:
         explicit_habr.scrape(theme=theme)
-        for job_article in explicit_habr.job_headers:
-            for tag in needed_tags:
-                if tag in job_article.descr or _check_tags(tag, job_article):
-                    notify_w_job(job_article)
+        if explicit_habr.last_scan:
+            for job_article in explicit_habr.last_scan:
+                for tag in needed_tags:
+                    if tag in job_article.descr or _check_tags(tag, job_article):
+                        notify_w_job(job_article)
+                        break
         time.sleep(150)
 
 
-if prsd_args.a:
+# todo add termination mechanism
+
+if prsd_args.notify:
     fl_waiter = threading.Thread(target=notify_loop,
-                                 args=('all', ['python', 'парс', 'bot', 'django', 'pars', 'бот']))
+                                 args=('all', ['python', 'парс', 'bot', 'django', 'pars', 'бот'],))
     fl_waiter.start()
-    fl_waiter.join()
+    try:
+        fl_waiter.join()
+    except KeyboardInterrupt:
+        sys.exit(1)

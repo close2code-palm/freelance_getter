@@ -3,7 +3,7 @@ class without threading
 """
 
 import uuid
-from typing import List
+from typing import List, Type, NewType
 
 import bs4
 import requests
@@ -12,8 +12,12 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 
-from part_time import WorkHeaders, HabrWorkHeader
+from job_posts_models import WorkHeaders, HabrWorkHeader
 
+# todo modularize!!
+# todo add job link
+
+WorkDerivedArticle = NewType('WorkDerivedArticle', WorkHeaders)
 
 # Need to be splited into parser and site_handler
 class Site:
@@ -21,6 +25,7 @@ class Site:
 
     def get_scraped(self):
         return self.name, self.job_headers
+
 
     def __init__(self, url, name, act_counter,
                  suffs, *containers, js_rends=False):
@@ -32,9 +37,14 @@ class Site:
         # TODO possibly extensible for page rendering mechanics check
         # if 'document.write' in ...
         self.dyn = js_rends
+        self.last_scan = None
         # TODO store to not repeat
         # UNIQUE in db or watcher
-        self.job_headers: List[WorkHeaders] = []
+        self.job_headers: List[WorkDerivedArticle] = []
+
+    # def get_recent(self):
+    #     for fresh_one in self.last_scan:
+    #         if
 
     # will be needed on added spec sufficcess
     def _url_constr(self, sphere, initial=True) -> str:
@@ -83,10 +93,15 @@ class Site:
     # TODO normalize utils
     def ent_gen(self, parameters):
         """constructing job item for processing"""
+        recently_generated_list = set()
         for j_t, j_p, j_d in parameters:
             head = WorkHeaders(str(uuid.uuid4()), j_t.text.strip(), j_p.text.strip(),
                                j_d.text.strip(), self.name)
-            self.job_headers.append(head)
+            if head not in self.job_headers:
+                recently_generated_list.add(head)
+        if self.job_headers:
+            self.last_scan = recently_generated_list
+        self.job_headers.extend(recently_generated_list)
 
     # TODO make decorator for concurrency
     def _get_soup(self, url: str):
@@ -128,8 +143,6 @@ class HabrFlSite(Site):
 
     def ent_gen(self, parameters):
         for tags_soup, j_t, j_p, j_d in parameters:
-            # print(*self.tags_concrete)
-            # print(tags_soup)
             tags = tags_soup.find_all(*self.tags_concrete)
             habr_proposal = HabrWorkHeader(str(uuid.uuid4()),
                                            j_t.text.strip(), j_p.text.strip(),
