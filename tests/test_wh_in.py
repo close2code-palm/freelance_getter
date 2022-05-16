@@ -40,8 +40,8 @@ class TestWorkHeaders:
         return test_header
 
     @pytest.fixture
-    def container(self):
-        return [self.header0]
+    def container(self, header0):
+        return [header0]
 
     # @pytest.mark.xfail
     def test_in_on_eq_and_not_same(self, header1, container):

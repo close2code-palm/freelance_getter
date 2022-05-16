@@ -37,5 +37,5 @@ class HabrWorkHeader(WorkHeaders):
     tags: List[str]
 
     def __eq__(self, other):
-        """Bounded with """
+        """Bounded with check in flsite.HabrFl.get_ent"""
         return self.price == other.price and self.descr == other.descr

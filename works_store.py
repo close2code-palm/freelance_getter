@@ -9,7 +9,7 @@ import configparser
 import psycopg2
 
 from flsite import Site
-from part_time import WorkHeaders
+from job_posts_models import WorkHeaders
 
 
 class StorageOperator:

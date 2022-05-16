@@ -40,6 +40,7 @@ freenace_ru = Site(
 habr_fl_1f = 'div', {"class": "task__title"}
 habr_fl_2f = 'span', {'class': 'count'}
 habr_fl_3f = 'span', {"class": "params__published-at"}
+habr_fl_4f = 'div.task__tittle a[href]'
 # habr_fl = Site(
 #     'https://freelance.habr.com',
 #     'HABRFL',
@@ -71,7 +72,7 @@ explicit_habr = HabrFlSite(
      design_mobile,design_icons,design_polygraphy,design_banners,design_graphics,design_corporate_identity,\
      design_presentations,design_modeling,design_animation,design_photo,design_other',
      'pager': '?page='},
-    habr_fl_1f, habr_fl_2f, habr_fl_3f,
+    habr_fl_1f, habr_fl_2f, habr_fl_3f, habr_fl_4f
 )
 
 
@@ -179,14 +180,17 @@ def notify_loop(theme, needed_tags):
                 return True
 
     while True:
+        loop_timeout = 150
         explicit_habr.scrape(theme=theme)
         if explicit_habr.last_scan:
             for job_article in explicit_habr.last_scan:
                 for tag in needed_tags:
                     if tag in job_article.descr or _check_tags(tag, job_article):
                         notify_w_job(job_article)
+                        loop_timeout -= 5
                         break
-        time.sleep(150)
+        if loop_timeout > 0:
+            time.sleep(loop_timeout)
 
 
 # todo add termination mechanism
